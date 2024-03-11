@@ -7,7 +7,9 @@
 #define DEBUG=1
 
 int main (int argc, char** argv){
-    char *fname = argc > 1 ? argv[1] : “text.txt”;
+    char *fname = argv[1];
 	int fd = open(fname, O_RDONLY); 
+
+    
 
 }
