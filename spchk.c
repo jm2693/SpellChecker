@@ -6,6 +6,8 @@
 
 #define DEBUG=1
 
-int main (int args, char** argv){
+int main (int argc, char** argv){
+    char *fname = argc > 1 ? argv[1] : “text.txt”;
+	int fd = open(fname, O_RDONLY); 
 
 }
