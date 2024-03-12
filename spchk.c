@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#define DEBUG=1
+#define DEBUG 1
 
 int main (int argc, char** argv){
     char *fname = argv[1];
