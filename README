@@ -1,0 +1,7 @@
+Jason Merchan, jm2693
+Daniel Li, dal
+
+Design Choices:
+    Data Structure:
+        - We've decided to go with a sorted array.
+        - It will read through the dictionary once and then use binary search to look for each word in the txt files.
