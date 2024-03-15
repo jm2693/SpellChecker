@@ -6,9 +6,12 @@
 #include <dirent.h>
 #define DEBUG 1
 
-void dict_arr () {
+void dict_arr (char* dict_file) {
 
+    int i = 0;
+    while (i != NULL) {
 
+    }
 }
 
 
@@ -32,7 +35,7 @@ void file_search (char* filename) {          // function to recursively search f
         }
     }
 
-    closedir(dir);
+    closedir(dir);                           // close file when done 
 }
 
 

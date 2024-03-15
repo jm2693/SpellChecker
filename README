@@ -5,3 +5,29 @@ Design Choices:
     Data Structure:
         - We've decided to go with a sorted array.
         - It will read through the dictionary once and then use binary search to look for each word in the txt files.
+
+
+    Current Design Idea:
+        = For Dictionary
+            - Open Dictionary File
+            - count number of words in dict either throught '\n' or whitespace
+            - keep track of the largest word
+            - create a char** arr[num_of_words][len_of_largest_word] and load every word into this array 
+
+        - For .txt/Directories
+            - use DIR to recursively search through directories 
+            - check to see if the current file is a dir 
+                - if yes repeat until txt file found
+            - if no check to see if it is a txt file
+                - if yes read through the file and compare to dict
+            - if NULL end while loop
+
+        - Comparing txt and Dictionary 
+            - using ASCII values of 65-90 for capital letters and 97-122 for lowercase (+/- 32 to switch in-between)
+            - use binary search to look for ASCII value version of txt file words
+                - if first char in txt word is b/w 97-122, must also search for ASCII value word with first char minus 32
+                - also, for every char b/w 97-122, minus 32
+                - the above two search for First Character Uppercase and CAPS respectively 
+            - if no word is found print error with line and column 
+                - keep track of line with '\n'
+                - keep track of column with simple counter, reverts back to 1 everytime it encounters '\n'
