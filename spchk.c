@@ -8,7 +8,11 @@
 
 void dict_arr (char* dict_file) {
 
-    int i = 0;
+    int counter = 0;
+
+    open(dict_file, );
+
+    char* i = 0;
     while (i != NULL) {
 
     }
@@ -26,6 +30,10 @@ void file_search (char* filename) {          // function to recursively search f
     entity = readdir(dir);                      
 
     while (entity != NULL) {
+        if (entity->d_name[0] == '.') {
+            continue;                        // skips hidden files or directories
+        }
+
         if (entity->d_type == DT_DIR) {      // checks if the file is a directory 
             char path[200] = { '\0' };       // creates path for the file as a string
             strcat(path, filename);          // concatonates the currrent file to the path variable
@@ -46,7 +54,22 @@ void check_for_word() {
 }
 
 
+
+void return_error() {
+
+}
+
+
 int main (int argc, char** argv){
+
+    if (argc < 3) {
+        printf("Use of %s: <dictionary_path> <file1> <file2> ...");
+        return EXIT_FAILURE;
+    }
+
+    dict_arr(argv[1]);
+
+
     char *fname = argv[1];
 	int fd = open(fname, O_RDONLY); 
 
