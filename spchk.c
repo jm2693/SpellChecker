@@ -8,14 +8,7 @@
 
 void dict_arr (char* dict_file) {
 
-    int counter = 0;
 
-    open(dict_file, );
-
-    char* i = 0;
-    while (i != NULL) {
-
-    }
 }
 
 
