@@ -79,7 +79,7 @@ int main (int argc, char** argv){
 
     char *fname = argv[1];
 	int fd = open(fname, O_RDONLY); 
-
+    
     
 
 }
