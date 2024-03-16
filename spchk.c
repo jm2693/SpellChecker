@@ -47,8 +47,14 @@ void file_search (char* filename) {          // function to recursively search f
     closedir(dir);                           // close file when done 
 }
 
-
-
+int case_word(char word[]){
+    for(int i = 1; i < sizeof(word); i++){
+        if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
+            return 1;                        // returns 1 if capitalized letter
+        }
+    }
+    return 0;                                // not a pronoun 
+}
 
 void check_for_word() {
 
