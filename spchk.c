@@ -7,16 +7,22 @@
 #include <ctype.h>
 #define DEBUG 1
 
-void dict_arr (char* dict_file) {
+typedef struct word {                       // creates a char* struct, as to not use a char[][] and instead use a word* for a string array
+    char *word;
+} word;
 
-    int counter = 0;
+word* dict_arr (char* dict_file, int* word_num) {   // dict_arr will take in the dictionary pathname and return an pointer to a word array (array of strings)
 
-    open(dict_file, );
-
-    char* i = 0;
-    while (i != NULL) {
-
+    int fd = open(dict_file, O_RDONLY);     // opens the dictionary file using its pathname 
+    if (fd < 0) {
+        perror("Error: ");                  // prints error using msg and errno 
+        return EXIT_FAILURE;                // if open fails, returns error
     }
+    word *dictionary_start = NULL;          // a pointer to the word array (what the function will return)
+    *word_num = 0;
+
+
+    close(fd);                              // anything opened must be closed when done with use
 }
 
 
@@ -68,12 +74,9 @@ int main (int argc, char** argv){
         return EXIT_FAILURE;
     }
 
-    dict_arr(argv[1]);
+    int num_of_words;
+    dict_arr(argv[1], &num_of_words);
 
 
-    char *fname = argv[1];
-	int fd = open(fname, O_RDONLY); 
-
-    
 
 }
