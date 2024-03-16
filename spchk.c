@@ -4,11 +4,19 @@
 #include <fcntl.h>
 #include <string.h>
 #include <dirent.h>
+#include <ctype.h>
 #define DEBUG 1
 
 void dict_arr (char* dict_file) {
 
+    int counter = 0;
 
+    open(dict_file, );
+
+    char* i = 0;
+    while (i != NULL) {
+
+    }
 }
 
 
