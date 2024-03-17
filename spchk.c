@@ -92,7 +92,7 @@ Word* dict_arr (char* dict_file, int* word_num) {   // dict_arr will take in the
 
 
 
-void file_search (char* filename) {          // function to recursively search for files in a directory 
+void file_search (char* filename, Word* dictionary) {          // function to recursively search for files in a directory 
     DIR *dir = opendir(filename);            // creating a DIR* to open file           
     if (dir == NULL) return;                 // if file is NULL, function returns
 
@@ -110,7 +110,7 @@ void file_search (char* filename) {          // function to recursively search f
             strcat(path, filename);          // concatonates the currrent file to the path variable
             strcat(path, "/");               // '/' to indicate new dir
             strcat(path, entity->d_name);    // 
-            file_search(path);               // recursive search
+            file_search(path, dictionary);               // recursive search
         }
     }
 
@@ -126,7 +126,7 @@ int case_word(char word[]){
     return 0;                                // not a pronoun 
 }
 
-void check_for_word() {
+void check_for_word(char* word, Word* dictionary) {
 
 }
 
@@ -148,7 +148,7 @@ int main (int argc, char** argv){
     Word *official_dict_arr = dict_arr(argv[1], &num_of_words);
 
     for (int i = 2; i < argc; i++) {
-        file_search(*(argv[i]));
+        file_search((argv[i]), official_dict_arr);
     }
 
 
