@@ -118,7 +118,7 @@ void file_search (char* filename) {          // function to recursively search f
 }
 
 int case_word(char word[]){
-    for(int i = 1; i < sizeof(word); i++){
+    for(int i = 1; i < sizeof(char*); i++){
         if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
             return 1;                        // returns 1 if capitalized letter
         }
@@ -145,7 +145,7 @@ int main (int argc, char** argv){
     }
 
     int num_of_words;
-    dict_arr(argv[1], &num_of_words);
+    Word *official_dict_arr = dict_arr(argv[1], &num_of_words);
 
 
 
