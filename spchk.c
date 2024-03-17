@@ -96,26 +96,31 @@ Word* dict_arr (char* dict_file, int* word_num) {
     return dictionary_start;
 }
 
-void file_search (char* filename, Word* dictionary) {          // function to recursively search for files in a directory 
+// function to recursively search for files in a directory 
+void file_search (char* filename, Word* dictionary, int word_num) {          
     DIR *dir = opendir(filename);            // creating a DIR* to open file           
     if (dir == NULL) return;                 // if file is NULL, function returns
 
     typedef struct dirent dirent;            
-    dirent* entity;                          // creating dirent* called entity 
-    entity = readdir(dir);                      
+    dirent* entry;                           // creating dirent* called  
+    entry = readdir(dir);                      
 
-    while (entity != NULL) {
-        if (entity->d_name[0] == '.') {
-            continue;                        // skips hidden files or directories
+    while (entry != NULL) {
+        if (entry->d_name[0] == "." || entry->d_name[0] == "..") {
+            continue;                        // skips current and parent directories
         }
 
-        if (entity->d_type == DT_DIR) {      // checks if the file is a directory 
-            char path[200] = { '\0' };       // creates path for the file as a string
+        if (entry->d_type == DT_DIR) {       // checks if the file is a directory 
+            char path[1024] = { '\0' };      // creates path for the file as a string
             strcat(path, filename);          // concatonates the currrent file to the path variable
             strcat(path, "/");               // '/' to indicate new dir
-            strcat(path, entity->d_name);    // 
-            file_search(path, dictionary);               // recursive search
+            strcat(path, entry->d_name);      
+            file_search(path, dictionary, word_num);               // recursive search
         }
+
+        // if (entry->d_type == DT_REG) {
+        //     check_spelling(FIX, dictionary, word_num);
+        // }
     }
 
     closedir(dir);                           // close file when done 
@@ -130,12 +135,61 @@ int case_word(char *word){
     return 0;                                // not a pronoun 
 }
 
-void check_for_word(char* word, Word* dictionary) {
+void check_spelling(char* txt_file, Word* dictionary, int word_num) {
+    int fd = open(txt_file, O_RDONLY);
+    if (fd < 0) {
+        perror("Error: ");
+        return;
+    }
 
+    int line_counter = 1;
+    int column_counter = 0;
+
+    ssize_t bytes_read;                 
+    char buffer[WORD_LENGTH];           // buffer for reading in the txt file
+    char word_buffer[WORD_LENGTH];      // buffer for constructing words from the txt file
+    int word_index = 0;                 // index within each word
+
+    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+        for (ssize_t i = 0; i < bytes_read; i++) {
+            char c = buffer[i];
+            column_counter++;
+            if (c == ' ' || c == '\n' || c == '\t' || c == '\v') {
+                if (c == '\n') {
+                    line_counter++;
+                    column_counter = 1;
+                }
+
+                word_buffer[word_index] = '\0'; // null-terminate the word
+                int found = 0;
+                for (int j = 0; j < word_num; j++) {
+                    if (strcmp(word_buffer, dictionary[j].word) == 0) {
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found < 0) {
+                    printf("Incorrect word: %s\n", word_buffer);
+                }
+                // Reset wordBuffer and wordIndex for the next word
+                memset(word_buffer, 0, sizeof(word_buffer));
+                word_index = 0;
+            } else {
+                // Add character to wordBuffer
+                if (word_index < WORD_LENGTH - 1) {
+                    word_buffer[word_index++] = c;
+                }
+            }
+        }
+    }
+
+    close(fd);
 }
 
-void return_error() {
+int return_error(char* txt_file, char* misspelled_word, int line, int column) {
 
+    printf("%s (%d,%d): %s\n", txt_file, line, column, misspelled_word);
+    return EXIT_FAILURE;
 }
 
 int main (int argc, char** argv){
@@ -159,7 +213,7 @@ int main (int argc, char** argv){
     }
 
     for (int i = 2; i < argc; i++) {
-        file_search((argv[i]), official_dict_arr);
+        file_search((argv[i]), official_dict_arr, num_of_words);
     }
 
     for (int i = 0; i < num_of_words; i++) {
