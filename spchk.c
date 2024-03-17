@@ -147,6 +147,10 @@ int main (int argc, char** argv){
     int num_of_words;
     Word *official_dict_arr = dict_arr(argv[1], &num_of_words);
 
+    for (int i = 2; i < argc; i++) {
+        file_search(*(argv[i]));
+    }
+
 
 
 }
