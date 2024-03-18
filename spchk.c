@@ -19,7 +19,9 @@ void file_search (char* filename, Word* dictionary, int word_num);
 void check_spelling(char* txt_file, Word* dictionary, int word_num);
 int return_error(char* txt_file, char* misspelled_word, int line, int column);
 
-int compare ();     // for binary search 
+int compare_words (const void* first, const void* second) {   // for binary search 
+    return strcmp ((char*)first, ((Word*)second)->word);
+}     
 
 // dict_arr will take in the dictionary pathname and return an pointer to a word array (array of strings)
 Word* dict_arr (char* dict_file, int* word_num) {   
@@ -174,7 +176,16 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
                 Word key;
                 key.word = word_buffer;
 
-                Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), );
+                Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
+                // MISSING CASES FOR CAPITALIZED AND ALL CAPS
+                if (found == NULL) {
+                    return_error(txt_file, key.word, line_counter, column_counter);
+                }
+            } else {
+                
+                if (word_index < WORD_LENGTH-1) {
+                    word_buffer[(word_index++)] = c;
+                }
             }
         }
     }
