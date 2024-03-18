@@ -220,6 +220,7 @@ int case_word(char *word){
     return 0;                                // not a pronoun 
 }
 
+
 void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
     if (DEBUG) printf("check spelling 1\n");
