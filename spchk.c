@@ -40,20 +40,20 @@ int compare_words (const void* first, const void* second) {   // for binary sear
             for(size_t i = 0; i < length; i++){               // fully uppercase
                 temp[i] = toupper(dict[i]);
             }
-            int comp = strcmp ((char*)first, dict);
+            comp = strcmp ((char*)first, dict);
             if(comp == 0) return 0;
 
             for(size_t i = 0; i < length; i++){               // fully lowercase
                 temp[i] = tolower(dict[i]);
             }
-            int comp = strcmp ((char*)first, dict);
+            comp = strcmp ((char*)first, dict);
             if(comp == 0) return 0;
 
             temp[0] = toupper(dict[0]);                       // first capitalized
             for(size_t i = 1; i < length; i++){               
                 temp[i] = tolower(dict[i]);
             }
-            int comp = strcmp ((char*)first, dict);
+            comp = strcmp ((char*)first, dict);
             if(comp == 0) return 0;
 
             return 1;
@@ -61,14 +61,14 @@ int compare_words (const void* first, const void* second) {   // for binary sear
             for(size_t i = 0; i < length; i++){               // fully uppercase
                 temp[i] = toupper(dict[i]);
             }
-            int comp = strcmp ((char*)first, dict);
+            comp = strcmp ((char*)first, dict);
             if(comp == 0) return 0;
             
             temp[0] = toupper(dict[0]);                       // first capitalized
             for(size_t i = 1; i < length; i++){               
                 temp[i] = dict[i];
             }
-            int comp = strcmp ((char*)first, dict);
+            comp = strcmp ((char*)first, dict);
             if(comp == 0) return 0;
 
             return 1; 
