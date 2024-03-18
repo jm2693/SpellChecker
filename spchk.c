@@ -15,43 +15,12 @@ typedef struct Word {                       // creates a char* struct, as to not
     char *word;
 } Word;
 
-Word* dict_arr (char* dict_file, int* word_num);                        // making dictionary into a string array
-void file_search (char* filename, Word* dictionary, int word_num);      // determining if regular file or directory + recursive search
-void check_spelling(char* txt_file, Word* dictionary, int word_num);    // checks every word in txt file against dictionary array
-int return_error(char* txt_file, char* misspelled_word, int line, int column);  // returns error for misspelled word
-
-// int is_punctuation(char c) {
-//     return c == '.' || c == ',' || c == '!' || c == '?' || c == ':' || c == ';' || c == '(' || c == ')' 
-//                     || c == '[' || c == ']' || c == '{' || c == '}' || c == '/' || c == '\'';
-// }
-
-int is_quote_brack(char c) {
-    return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == '"' || c == '\'';
-}
-
-void remove_trailing_punctuation(char *str) {
-    if (str == NULL) // Check for NULL pointer
-        return;
-
-    int length = 0;
-
-    // Find the length of the string
-    while ((str + length) != NULL) {
-        length++;
-    }
-
-    // Decrement length to exclude null terminator
-    length--;
-
-    // Move backwards from the end of the string
-    while (length >= 0 && ispunct(*(str + length))) {
-        *(str + length) = '\0'; // Replace punctuation with null terminator
-        length--; // Move to the previous character
-    }
-}
+Word* dict_arr (char* dict_file, int* word_num);                                                              // making dictionary into a string array
+void file_search (char* filename, Word* dictionary, Word* dictionary1, Word* dictionary2, int word_num);      // determining if regular file or directory + recursive search
+void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* dicitonary2, int word_num);    // checks every word in txt file against dictionary array
+int return_error(char* txt_file, char* misspelled_word, int line, int column);                                // returns error for misspelled word
 
 int compare_words (const void* first, const void* second) {   // for binary search 
-
     if (DEBUG) printf("check cmp 1\n");
 
     return strcmp ((char*)first, ((Word*)second)->word);
@@ -146,8 +115,69 @@ Word* dict_arr (char* dict_file, int* word_num) {
     return dictionary_start;
 }
 
+// dict_dict_upper_case_arr will take in the main dictionary and turns the words to uppercase
+Word* dict_upper_case_arr (Word* dict_file, int word_num) {   
+    Word *dictionary_start = (Word*)malloc(word_num * sizeof(Word));   // Allocate memory for array of Word structs
+    if (dictionary_start == NULL) {                                     // Check if allocation fails
+        perror("Error: ");
+        return NULL;
+    }
+
+    for (int i = 0; i < word_num; i++) {
+        int len = strlen(dict_file[i].word);
+        dictionary_start[i].word = (char*)malloc((len + 1) * sizeof(char));
+        if (dictionary_start[i].word == NULL) {
+            perror("Error: ");
+            // Free allocated memory before returning
+            for (int j = 0; j < i; j++) {
+                free(dictionary_start[j].word);
+            }
+            free(dictionary_start);
+            return NULL;
+        }
+
+        // Convert each character to uppercase
+        for (int j = 0; j < len; j++) {
+            dictionary_start[i].word[j] = toupper(dict_file[i].word[j]);
+        }
+        dictionary_start[i].word[len] = '\0'; // Null-terminate the string
+    }
+    return dictionary_start;
+}
+
+Word* dict_first_letter_capitalized_arr(Word* dict_file, int word_num) {
+    Word *dictionary_start = (Word*)malloc(word_num * sizeof(Word));   // Allocate memory for array of Word structs
+    if (dictionary_start == NULL) {                                     // Check if allocation fails
+        perror("Error: ");
+        return NULL;
+    }
+
+    for (int i = 0; i < word_num; i++) {
+        int len = strlen(dict_file[i].word);
+        dictionary_start[i].word = (char*)malloc((len + 1) * sizeof(char));
+        if (dictionary_start[i].word == NULL) {
+            perror("Error: ");
+            // Free allocated memory before returning
+            for (int j = 0; j < i; j++) {
+                free(dictionary_start[j].word);
+            }
+            free(dictionary_start);
+            return NULL;
+        }
+
+        // Convert the first character of each word to uppercase
+        dictionary_start[i].word[0] = toupper(dict_file[i].word[0]);
+        // Copy the rest of the word as it is
+        for (int j = 1; j < len; j++) {
+            dictionary_start[i].word[j] = dict_file[i].word[j];
+        }
+        dictionary_start[i].word[len] = '\0'; // Null-terminate the string
+    }
+    return dictionary_start;
+}
+
 // function to recursively search for files in a directory 
-void file_search (char* filename, Word* dictionary, int word_num) {     
+void file_search (char* filename, Word* dictionary, Word* dictionary1, Word* dictionary2, int word_num) {     
     
     if (DEBUG) printf("check file 0\n");
 
@@ -182,7 +212,7 @@ void file_search (char* filename, Word* dictionary, int word_num) {
                 strcat(path, "/");               // '/' to indicate new dir
                 strcat(path, entry->d_name);      
                 if (DEBUG) printf("%s\n", path);
-                file_search(path, dictionary, word_num);               // recursive search
+                file_search(path, dictionary, dictionary1, dictionary2, word_num);               // recursive search
             } else if (entry->d_type == DT_REG) {
                 char path[1024] = { '\0' };      // creates path for the file as a string
                 strcat(path, filename);          // concatonates the currrent file to the path variable
@@ -193,7 +223,7 @@ void file_search (char* filename, Word* dictionary, int word_num) {
                 if (DEBUG) printf("check file 3.5\n");
                 if (DEBUG) printf("%s, %s, %d\n", path, (char*)(dictionary), word_num);
 
-                check_spelling(path, dictionary, word_num);
+                check_spelling(path, dictionary, dictionary1, dictionary2, word_num);
             }
             entry = readdir(dir);
         }
@@ -204,24 +234,14 @@ void file_search (char* filename, Word* dictionary, int word_num) {
 
             if (DEBUG) printf("check file 4\n");
 
-            check_spelling(filename, dictionary, word_num);
+            check_spelling(filename, dictionary, dictionary1, dictionary2, word_num);
         }
 
         if (DEBUG) printf("check file 5\n");
 
 }
 
-int case_word(char *word){
-    for(int i = 1; i < sizeof(char*); i++){
-        if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
-            return 1;                        // returns 1 if capitalized letter
-        }
-    }
-    return 0;                                // not a pronoun 
-}
-
-
-void check_spelling(char* txt_file, Word* dictionary, int word_num) {
+void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* dictionary2, int word_num) {
 
     if (DEBUG) printf("check spelling 1\n");
 
@@ -238,11 +258,6 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
     char buffer[WORD_LENGTH];           // buffer for reading in the txt file
     char word_buffer[WORD_LENGTH];      // buffer for constructing words from the txt file
     int word_index = 0;                 // index within each word
-    // char valid_word[1024];              
-    // int punctuation_start_count = 0;
-    // int punctuation_middle_count = 0;
-    // int punctuation_end_count = 0;
-    // int punc_count = 0;
 
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
@@ -259,13 +274,23 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
                 if (DEBUG) printf("check spelling 4\n");
 
+                if (c == '\n') {
+
+                    if (DEBUG) printf("check spelling 5\n");
+
+                    line_counter++;
+                    column_counter = 1;
+                }
+
                 if (c == '-') {
                     word_buffer[word_index] = '\0'; // null-terminate the word
                     Word key;
                     key.word = word_buffer;
 
                     Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
-                    if (found == NULL) {
+                    Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
+                    Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
+                    if (found == NULL && found1 == NULL && found2 == NULL) {
                         return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
                     }
                     memset(word_buffer, 0, sizeof(word_buffer));
@@ -274,47 +299,27 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
                     continue; // Skip processing hyphen as part of the word
                 }
 
-                if (word_index > 0) {
-                    if (DEBUG) printf("check spelling 6\n");
-                    word_buffer[word_index] = '\0'; // null-terminate the word
-                    Word key;
-                    key.word = word_buffer;
+                if (DEBUG) printf("check spelling 6\n");
 
-                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
-                    // MISSING CASES FOR CAPITALIZED AND ALL CAPS
-                    if (found == NULL) {
+                word_buffer[word_index] = '\0'; // null-terminate the word
+                Word key;
+                key.word = word_buffer;
 
-                        if (DEBUG) printf("check spelling 7\n");
+                Word *found  = bsearch(key.word, dictionary , word_num, sizeof(Word), compare_words);
+                Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
+                Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
+                if (found == NULL && found1 == NULL && found2 == NULL) {
 
-                        return_error(txt_file, key.word, line_counter, column_counter - word_index);
-                    }
-                    memset(word_buffer, 0, sizeof(word_buffer));
-                    word_index = 0;
+                    if (DEBUG) printf("check spelling 7\n");
+
+                    return_error(txt_file, key.word, line_counter, column_counter - word_index);
                 }
-
-                if (c == '\n') {
-
-                    if (DEBUG) printf("check spelling 5\n");
-
-                    line_counter++;
-                    column_counter = 0;
-                }
-
-            } 
-            
-            // else if (is_quote_brack(c) && word_index == 0) {
-            //     punc_count++;
-            //     continue;
-            // } else if ((ispunct(c)) && word_index > 0) {
-            //     punc_count++;
-            //     continue;
-            // }
-            
-            else {
+                memset(word_buffer, 0, sizeof(word_buffer));
+                word_index = 0;
+            } else {
 
                 if (DEBUG) printf("check spelling 8\n");
 
-                //word_index += punc_count;
                 if (word_index < WORD_LENGTH-1) {
 
                     if (DEBUG) printf("check spelling 9\n");
@@ -367,6 +372,17 @@ int main (int argc, char** argv){
     }
 
     qsort(official_dict_arr, num_of_words, sizeof(Word), compare_strings);
+    Word *dict_upper_arr = dict_upper_case_arr(official_dict_arr, num_of_words);
+    if (dict_upper_arr == NULL) {
+        printf("Error: Failed to read dictionary file '%s'\n", argv[1]);
+        return EXIT_FAILURE;
+    }
+
+    Word *dict_first_upper_arr = dict_first_letter_capitalized_arr(official_dict_arr, num_of_words);
+    if (dict_upper_arr == NULL) {
+        printf("Error: Failed to read dictionary file '%s'\n", argv[1]);
+        return EXIT_FAILURE;
+    }
 
     if (DEBUG) {
         printf("Dictionary words:\n");
@@ -376,17 +392,19 @@ int main (int argc, char** argv){
     }
 
     for (int i = 2; i < argc; i++) {
-
         if (DEBUG) printf("check arg 1\n");
 
-        file_search((argv[i]), official_dict_arr, num_of_words);
+        file_search((argv[i]), official_dict_arr, dict_upper_arr, dict_first_upper_arr, num_of_words);
     }
 
     for (int i = 0; i < num_of_words; i++) {
         free(official_dict_arr[i].word);
+        free(dict_upper_arr[i].word);
+        free(dict_first_upper_arr[i].word);
     }
     free(official_dict_arr);
-
+    free(dict_upper_arr);
+    free(dict_first_upper_arr);
 
     return EXIT_SUCCESS;
 }
