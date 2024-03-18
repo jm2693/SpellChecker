@@ -5,6 +5,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <sys/stat.h>
 
 #define DEBUG 1
 #define DICT_LINES 10000                    // initial num of lines assumed to be 10000
@@ -20,6 +21,9 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num);
 int return_error(char* txt_file, char* misspelled_word, int line, int column);
 
 int compare_words (const void* first, const void* second) {   // for binary search 
+
+    if (DEBUG) printf("check cmp 1\n");
+
     return strcmp ((char*)first, ((Word*)second)->word);
 }     
 
@@ -106,36 +110,58 @@ Word* dict_arr (char* dict_file, int* word_num) {
 }
 
 // function to recursively search for files in a directory 
-void file_search (char* filename, Word* dictionary, int word_num) {          
-    DIR *dir = opendir(filename);            // creating a DIR* to open file           
-    if (dir == NULL) return;                 // if file is NULL, function returns
+void file_search (char* filename, Word* dictionary, int word_num) {     
+    
+    if (DEBUG) printf("check file 0\n");
 
-    typedef struct dirent dirent;            
-    dirent* entry;                           // creating dirent* called  
-    entry = readdir(dir);                      
+    struct stat stats;
+    stat(filename, &stats);
 
-    while (entry != NULL) {
+    if (S_ISDIR(stats.st_mode)) {
 
-        // checks if the file is a directory 
-        if (entry->d_type == DT_DIR 
-        && strcmp(entry->d_name, ".") != 0 
-        && strcmp(entry->d_name, "..") != 0) {    
+        if (DEBUG) printf("check file 1\n");
 
-            char path[1024] = { '\0' };      // creates path for the file as a string
-            strcat(path, filename);          // concatonates the currrent file to the path variable
-            strcat(path, "/");               // '/' to indicate new dir
-            strcat(path, entry->d_name);      
-            file_search(path, dictionary, word_num);               // recursive search
+        DIR *dir = opendir(filename);            // creating a DIR* to open file           
+        if (dir == NULL) return;                 // if file is NULL, function returns
+
+
+        typedef struct dirent dirent;            
+        dirent* entry;                           // creating dirent* called  
+        entry = readdir(dir);                      
+
+        while (entry != NULL) {
+
+            if (DEBUG) printf("check file 2\n");
+
+            // checks if the file is a directory 
+            if (entry->d_type == DT_DIR 
+            && strcmp(entry->d_name, ".") != 0 
+            && strcmp(entry->d_name, "..") != 0) {    
+
+            if (DEBUG) printf("check file 3\n");
+
+                char path[1024] = { '\0' };      // creates path for the file as a string
+                strcat(path, filename);          // concatonates the currrent file to the path variable
+                strcat(path, "/");               // '/' to indicate new dir
+                strcat(path, entry->d_name);      
+                file_search(path, dictionary, word_num);               // recursive search
+            }
+            entry = readdir(dir);
         }
-
-        if (entry->d_type == DT_REG) {
-            check_spelling(entry->d_name, dictionary, word_num);
-        }
-
-        entry = readdir(dir);
+    closedir(dir);                           // close file when done 
     }
 
-    closedir(dir);                           // close file when done 
+        if (S_ISREG(stats.st_mode)) {
+
+            if (DEBUG) printf("check file 4\n");
+
+            check_spelling(filename, dictionary, word_num);
+        }
+
+        if (DEBUG) printf("check file 5\n");
+
+    if (DEBUG) printf("check file 6\n");
+
 }
 
 int case_word(char *word){
@@ -148,6 +174,9 @@ int case_word(char *word){
 }
 
 void check_spelling(char* txt_file, Word* dictionary, int word_num) {
+
+    if (DEBUG) printf("check spelling 1\n");
+
     int fd = open(txt_file, O_RDONLY);
     if (fd < 0) {
         perror("Error: ");
@@ -163,14 +192,28 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
     int word_index = 0;                 // index within each word
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+
+        if (DEBUG) printf("check spelling 2\n");
+
         for (ssize_t i = 0; i < bytes_read; i++) {
+
+            if (DEBUG) printf("check spelling 3\n");
+
             char c = buffer[i];
             column_counter++;
             if (c == ' ' || c == '\n' || c == '\t' || c == '\v') {
+
+                if (DEBUG) printf("check spelling 4\n");
+
                 if (c == '\n') {
+
+                    if (DEBUG) printf("check spelling 5\n");
+
                     line_counter++;
                     column_counter = 1;
                 }
+
+                if (DEBUG) printf("check spelling 6\n");
 
                 word_buffer[word_index] = '\0'; // null-terminate the word
                 Word key;
@@ -179,28 +222,43 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
                 Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
                 // MISSING CASES FOR CAPITALIZED AND ALL CAPS
                 if (found == NULL) {
+
+                    if (DEBUG) printf("check spelling 7\n");
+
                     return_error(txt_file, key.word, line_counter, column_counter);
                 }
             } else {
-                
+
+                if (DEBUG) printf("check spelling 8\n");
+
                 if (word_index < WORD_LENGTH-1) {
+
+                    if (DEBUG) printf("check spelling 9\n");
+
                     word_buffer[(word_index++)] = c;
                 }
             }
+
+            if (DEBUG) printf("check spelling 10\n");
+
         }
     }
+
+    if (DEBUG) printf("check spelling 11\n");
 
     close(fd);
 }
 
 int return_error(char* txt_file, char* misspelled_word, int line, int column) {
 
+    if (DEBUG) printf("check error 1\n");
+
     printf("%s (%d,%d): %s\n", txt_file, line, column, misspelled_word);
     return EXIT_FAILURE;
 }
 
 int main (int argc, char** argv){
-    if (argc < 2) {
+    if (argc < 3) {
         printf("Use of %s: <dictionary_path> <file1> <file2> ...", argv[0]);
         return EXIT_FAILURE;
     }
@@ -220,6 +278,9 @@ int main (int argc, char** argv){
     }
 
     for (int i = 2; i < argc; i++) {
+
+        if (DEBUG) printf("check arg 1\n");
+
         file_search((argv[i]), official_dict_arr, num_of_words);
     }
 
