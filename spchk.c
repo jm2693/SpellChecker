@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define DICT_LINES 10000                    // initial num of lines assumed to be 10000
 #define WORD_LENGTH 200                     // initial word length assumed to be 199 chars + null terminator 
 
