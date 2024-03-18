@@ -20,12 +20,61 @@ void file_search (char* filename, Word* dictionary, int word_num);
 void check_spelling(char* txt_file, Word* dictionary, int word_num);
 int return_error(char* txt_file, char* misspelled_word, int line, int column);
 
+int pronoun_checker (char * second){
+    size_t length = strlen(second); 
+    for(size_t i = 1; i < length; i++){
+        if(second[1] <= 90 && second[i] >= 65) return 2;      // checks capitalization
+    }
+    return 1;
+}
 int compare_words (const void* first, const void* second) {   // for binary search 
 
     if (DEBUG) printf("check cmp 1\n");
+    
+    switch(pronoun_checker(((Word*)second)->word)){
+        size_t length = strlen(second); 
+        char* dict = ((Word*)second)->word;
+        char* temp;
+        int comp; 
+        case 1:                                               // regular word
+            for(size_t i = 0; i < length; i++){               // fully uppercase
+                temp[i] = toupper(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
 
+            for(size_t i = 0; i < length; i++){               // fully lowercase
+                temp[i] = tolower(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+
+            temp[0] = toupper(dict[0]);                       // first capitalized
+            for(size_t i = 1; i < length; i++){               
+                temp[i] = tolower(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+
+            return 1;
+        case 2:                                               // pronoun
+            for(size_t i = 0; i < length; i++){               // fully uppercase
+                temp[i] = toupper(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+            
+            temp[0] = toupper(dict[0]);                       // first capitalized
+            for(size_t i = 1; i < length; i++){               
+                temp[i] = dict[i];
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+
+            return 1; 
+    }
     return strcmp ((char*)first, ((Word*)second)->word);
-}     
+} 
 
 // dict_arr will take in the dictionary pathname and return an pointer to a word array (array of strings)
 Word* dict_arr (char* dict_file, int* word_num) {   
