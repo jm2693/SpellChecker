@@ -27,16 +27,18 @@ int pronoun_checker (char * second){
     }
     return 1;
 }
+
 int compare_words (const void* first, const void* second) {   // for binary search 
 
     if (DEBUG) printf("check cmp 1\n");
-    
+
+    char* dict = ((Word*)second)->word;
+    size_t length = strlen((char*)dict); 
+    char* temp = NULL;
+    int comp; 
+
     switch(pronoun_checker(((Word*)second)->word)){
-        size_t length = strlen(second); 
-        char* dict = ((Word*)second)->word;
-        char* temp;
-        int comp; 
-        case 1:                                               // regular word
+        case 1:                                               // regular word   
             for(size_t i = 0; i < length; i++){               // fully uppercase
                 temp[i] = toupper(dict[i]);
             }
