@@ -14,6 +14,13 @@ typedef struct Word {                       // creates a char* struct, as to not
     char *word;
 } Word;
 
+Word* dict_arr (char* dict_file, int* word_num);
+void file_search (char* filename, Word* dictionary, int word_num);
+void check_spelling(char* txt_file, Word* dictionary, int word_num);
+int return_error(char* txt_file, char* misspelled_word, int line, int column);
+
+int compare ();     // for binary search 
+
 // dict_arr will take in the dictionary pathname and return an pointer to a word array (array of strings)
 Word* dict_arr (char* dict_file, int* word_num) {   
     int fd = open(dict_file, O_RDONLY);     // opens the dictionary file using its pathname 
@@ -71,7 +78,7 @@ Word* dict_arr (char* dict_file, int* word_num) {
                     }
                     dictionary_start = bigger_dictionary;
                 }
-                start = end + 1;
+                start = end+1;      // start now begins at the char after end
             }
 
             // in case last word does not have newlines at the end
@@ -106,11 +113,12 @@ void file_search (char* filename, Word* dictionary, int word_num) {
     entry = readdir(dir);                      
 
     while (entry != NULL) {
-        if (entry->d_name[0] == "." || entry->d_name[0] == "..") {
-            continue;                        // skips current and parent directories
-        }
 
-        if (entry->d_type == DT_DIR) {       // checks if the file is a directory 
+        // checks if the file is a directory 
+        if (entry->d_type == DT_DIR 
+        && strcmp(entry->d_name, ".") != 0 
+        && strcmp(entry->d_name, "..") != 0) {    
+
             char path[1024] = { '\0' };      // creates path for the file as a string
             strcat(path, filename);          // concatonates the currrent file to the path variable
             strcat(path, "/");               // '/' to indicate new dir
@@ -118,9 +126,11 @@ void file_search (char* filename, Word* dictionary, int word_num) {
             file_search(path, dictionary, word_num);               // recursive search
         }
 
-        // if (entry->d_type == DT_REG) {
-        //     check_spelling(FIX, dictionary, word_num);
-        // }
+        if (entry->d_type == DT_REG) {
+            check_spelling(entry->d_name, dictionary, word_num);
+        }
+
+        entry = readdir(dir);
     }
 
     closedir(dir);                           // close file when done 
@@ -161,24 +171,10 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
                 }
 
                 word_buffer[word_index] = '\0'; // null-terminate the word
-                int found = 0;
-                for (int j = 0; j < word_num; j++) {
-                    if (strcmp(word_buffer, dictionary[j].word) == 0) {
-                        found = 1;
-                        break;
-                    }
-                }
-                if (found < 0) {
-                    printf("Incorrect word: %s\n", word_buffer);
-                }
-                // Reset wordBuffer and wordIndex for the next word
-                memset(word_buffer, 0, sizeof(word_buffer));
-                word_index = 0;
-            } else {
-                // Add character to wordBuffer
-                if (word_index < WORD_LENGTH - 1) {
-                    word_buffer[word_index++] = c;
-                }
+                Word key;
+                key.word = word_buffer;
+
+                Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), );
             }
         }
     }
@@ -224,59 +220,3 @@ int main (int argc, char** argv){
 
     return EXIT_SUCCESS;
 }
-
-
-
-
-
-
-// former do while:
-// do {
-        //     printf("here step 5\n");
-        //     if (*end == '\n') {             // once end locates the newline operator
-        //         *end = '\0';                // it replaces it with null terminator to denote the end of a word
-        //         printf("here step 9\n");
-
-        //         dictionary_start[*word_num].word = strdup(start);   // word then gets copied into dictionary_start (using strdup over strcpy because it is more memory safe)
-        //         printf("word: %s\n", dictionary_start[*word_num].word);
-        //         if (dictionary_start[*word_num].word == NULL) {     // in case allocation fails
- 
-        //             for (int i = 0; i < *word_num; i++) {
-        //                 free(dictionary_start[i].word);
-        //             }
-        //             free(dictionary_start);
-        //             close(fd);
-        //             perror("Error: ");
-        //             return NULL;
-        //         }
-
-        //         (*word_num)++;                                      // number of words in dict goes up
-        //         num_of_words++;
-
-        //         if ((*word_num) >= lines_num) {                     // in case there are more words than initial assumption
-        //             lines_num *= 2;
-
-        //             Word *bigger_dict_arr = realloc(dictionary_start, lines_num * sizeof(Word));    // reallocates space for more lines
-        //             if (bigger_dict_arr == NULL) {                                                  // in case reallocation fails
-        //                 for (int i = 0; i < *word_num; i++) {
-        //                     free(dictionary_start[i].word);
-        //                 }
-        //                 free(dictionary_start);
-        //                 close(fd);
-        //                 perror("Error: ");
-        //                 return NULL;
-        //             }
-        //             dictionary_start = bigger_dict_arr;
-        //         }
-        //         start = end + 1;
-        //     }
-            
-        //     end++;
-
-        //     bytes_read -= (word_buffer - start);            // in case something goes wrong and 
-        //     if (bytes_read > 0) {
-        //         memmove(word_buffer, start, bytes_read);
-        //     }
-
-        // } while ((*end != '\n') && (end != NULL));    
-        // printf("here step 6\n"); 
