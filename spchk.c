@@ -21,6 +21,7 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
 int return_error(char* txt_file, char* misspelled_word, int line, int column);                                // returns error for misspelled word
 
 int compare_words (const void* first, const void* second) {   // for binary search 
+
     if (DEBUG) printf("check cmp 1\n");
 
     return strcmp ((char*)first, ((Word*)second)->word);
@@ -241,6 +242,42 @@ void file_search (char* filename, Word* dictionary, Word* dictionary1, Word* dic
 
 }
 
+int case_word(char *word){
+    for(int i = 1; i < sizeof(char*); i++){
+        if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
+            return 1;                        // returns 1 if capitalized letter
+        }
+    }
+    return 0;                                // not a pronoun 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* dictionary2, int word_num) {
 
     if (DEBUG) printf("check spelling 1\n");
@@ -258,7 +295,7 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
     char buffer[WORD_LENGTH];           // buffer for reading in the txt file
     char word_buffer[WORD_LENGTH];      // buffer for constructing words from the txt file
     int word_index = 0;                 // index within each word
-    int inHyphen = 0;                   // flag for whether we are processing a hyphenated word
+
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
 
@@ -274,45 +311,59 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
 
                 if (DEBUG) printf("check spelling 4\n");
 
-                if (c == '\n') {
-                    if (DEBUG) printf("check spelling 5\n");
-                    inHyphen = 0;
-                    line_counter++;
-                    column_counter = 1;
-                }
-
                 if (c == '-') {
-                    inHyphen = 1; // Set flag indicating that we're in a hyphenated word
-                    word_buffer[word_index++] = c;
-                    continue;
-                }
-
-                if (word_index > 0) {
-                    if (DEBUG) printf("check spelling 6\n");
-
-                    if (inHyphen) {
-                        word_buffer[word_index++] = c;
-                        continue;
-                    }
-
                     word_buffer[word_index] = '\0'; // null-terminate the word
                     Word key;
                     key.word = word_buffer;
 
-                    Word *found  = bsearch(key.word, dictionary , word_num, sizeof(Word), compare_words);
+                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
                     Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
                     Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
                     if (found == NULL && found1 == NULL && found2 == NULL) {
-                        return_error(txt_file, word_buffer, line_counter, column_counter - word_index);
+                        return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
                     }
+                    memset(word_buffer, 0, sizeof(word_buffer));
+                    word_index = 0;
+
+                    continue; // Skip processing hyphen as part of the word
                 }
 
-                memset(word_buffer, 0, sizeof(word_buffer));
-                word_index = 0;
-                inHyphen = 0; // Reset the flag
+                if (word_index > 0) {
+                    if (DEBUG) printf("check spelling 6\n");
+                    word_buffer[word_index] = '\0'; // null-terminate the word
+                    Word key;
+                    key.word = word_buffer;
+
+                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
+                    Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
+                    Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
+                    if (found == NULL && found1 == NULL && found2 == NULL) {
+
+                        if (DEBUG) printf("check spelling 7\n");
+
+                        return_error(txt_file, key.word, line_counter, column_counter - word_index);
+                    }
+                    memset(word_buffer, 0, sizeof(word_buffer));
+                    word_index = 0;
+                }
+
+                if (c == '\n') {
+
+                    if (DEBUG) printf("check spelling 5\n");
+
+                    line_counter++;
+                    column_counter = 0;
+                }
+
             } else {
+
+                if (DEBUG) printf("check spelling 8\n");
+
                 if (word_index < WORD_LENGTH-1) {
-                    word_buffer[word_index++] = c;
+
+                    if (DEBUG) printf("check spelling 9\n");
+
+                    word_buffer[(word_index++)] = c;
                 }
             }
 
@@ -322,13 +373,16 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
     }
 
     if (word_index > 0) {
+        column_counter++;
         word_buffer[word_index] = '\0'; // null-terminate the incomplete word
         Word key;
         key.word = word_buffer;
 
         Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
-        if (found == NULL) {
-            return_error(txt_file, word_buffer, line_counter, column_counter - word_index);
+        Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
+        Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
+        if (found == NULL && found1 == NULL && found2 == NULL) {
+            return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
         }
     }
 
