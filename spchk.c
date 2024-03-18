@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define DICT_LINES 10000                    // initial num of lines assumed to be 10000
 #define WORD_LENGTH 200                     // initial word length assumed to be 199 chars + null terminator 
 
@@ -26,6 +26,13 @@ int compare_words (const void* first, const void* second) {   // for binary sear
 
     return strcmp ((char*)first, ((Word*)second)->word);
 }     
+
+int compare_strings (const void* first, const void* second) {
+    char *s1 = ((Word*)first)->word;
+    char *s2 = ((Word*)second)->word;
+
+    return strcmp (s1, s2);
+}
 
 // dict_arr will take in the dictionary pathname and return an pointer to a word array (array of strings)
 Word* dict_arr (char* dict_file, int* word_num) {   
@@ -126,7 +133,7 @@ void file_search (char* filename, Word* dictionary, int word_num) {
 
 
         typedef struct dirent dirent;            
-        dirent* entry;                           // creating dirent* called  
+        dirent* entry;                    
         entry = readdir(dir);                      
 
         while (entry != NULL) {
@@ -144,7 +151,19 @@ void file_search (char* filename, Word* dictionary, int word_num) {
                 strcat(path, filename);          // concatonates the currrent file to the path variable
                 strcat(path, "/");               // '/' to indicate new dir
                 strcat(path, entry->d_name);      
+                if (DEBUG) printf("%s\n", path);
                 file_search(path, dictionary, word_num);               // recursive search
+            } else if (entry->d_type == DT_REG) {
+                char path[1024] = { '\0' };      // creates path for the file as a string
+                strcat(path, filename);          // concatonates the currrent file to the path variable
+                strcat(path, "/");               // '/' to indicate new dir
+                strcat(path, entry->d_name);      
+                if (DEBUG) printf("%s\n", path);
+
+                if (DEBUG) printf("check file 3.5\n");
+                if (DEBUG) printf("%s, %s, %d\n", path, (char*)(dictionary), word_num);
+
+                check_spelling(path, dictionary, word_num);
             }
             entry = readdir(dir);
         }
@@ -159,8 +178,6 @@ void file_search (char* filename, Word* dictionary, int word_num) {
         }
 
         if (DEBUG) printf("check file 5\n");
-
-    if (DEBUG) printf("check file 6\n");
 
 }
 
@@ -201,7 +218,7 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
             char c = buffer[i];
             column_counter++;
-            if (c == ' ' || c == '\n' || c == '\t' || c == '\v') {
+            if (c == ' ' || c == '\n' || c == '\t' || c == '\v' || c == '-') {
 
                 if (DEBUG) printf("check spelling 4\n");
 
@@ -211,6 +228,21 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
                     line_counter++;
                     column_counter = 1;
+                }
+
+                if (c == '-') {
+                    word_buffer[word_index] = '\0'; // null-terminate the word
+                    Word key;
+                    key.word = word_buffer;
+
+                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
+                    if (found == NULL) {
+                        return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
+                    }
+                    memset(word_buffer, 0, sizeof(word_buffer));
+                    word_index = 0;
+
+                    continue; // Skip processing hyphen as part of the word
                 }
 
                 if (DEBUG) printf("check spelling 6\n");
@@ -225,8 +257,10 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
                     if (DEBUG) printf("check spelling 7\n");
 
-                    return_error(txt_file, key.word, line_counter, column_counter);
+                    return_error(txt_file, key.word, line_counter, column_counter - word_index);
                 }
+                memset(word_buffer, 0, sizeof(word_buffer));
+                word_index = 0;
             } else {
 
                 if (DEBUG) printf("check spelling 8\n");
@@ -241,6 +275,18 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
             if (DEBUG) printf("check spelling 10\n");
 
+        }
+    }
+
+    if (word_index > 0) {
+        column_counter++;
+        word_buffer[word_index] = '\0'; // null-terminate the incomplete word
+        Word key;
+        key.word = word_buffer;
+
+        Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
+        if (found == NULL) {
+            return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
         }
     }
 
@@ -269,6 +315,8 @@ int main (int argc, char** argv){
         printf("Error: Failed to read dictionary file '%s'\n", argv[1]);
         return EXIT_FAILURE;
     }
+
+    qsort(official_dict_arr, num_of_words, sizeof(Word), compare_strings);
 
     if (DEBUG) {
         printf("Dictionary words:\n");
