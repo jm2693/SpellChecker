@@ -132,11 +132,14 @@ int case_word(char *word){
     return 1;                                // not a pronoun 
 }
 
+int compare (const void* key, const void* data){
+    
+}
 void check_for_word(char* word, Word* dictionary) {
-    char ex[12]; 
+    char ex[30]; 
     switch(case_word(ex)){
         case 1:                     // case for regular words
-        
+
         case 2:                     // case for pronouns/ words that have capitalization in middle
     }
 
