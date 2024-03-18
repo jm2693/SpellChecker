@@ -164,13 +164,15 @@ void file_search (char* filename, Word* dictionary, int word_num) {
 
 }
 
+
 int case_word(char *word){
     for(int i = 1; i < sizeof(char*); i++){
+
         if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
-            return 1;                        // returns 1 if capitalized letter
+            return 2;                        // returns 1 if capitalized letter
         }
     }
-    return 0;                                // not a pronoun 
+    return 1;                                // not a pronoun 
 }
 
 void check_spelling(char* txt_file, Word* dictionary, int word_num) {
@@ -257,7 +259,7 @@ int return_error(char* txt_file, char* misspelled_word, int line, int column) {
     return EXIT_FAILURE;
 }
 
-int main (int argc, char** argv){
+int main (int argc, char** argv) {
     if (argc < 3) {
         printf("Use of %s: <dictionary_path> <file1> <file2> ...", argv[0]);
         return EXIT_FAILURE;
@@ -289,6 +291,6 @@ int main (int argc, char** argv){
     }
     free(official_dict_arr);
 
-
+    
     return EXIT_SUCCESS;
 }
