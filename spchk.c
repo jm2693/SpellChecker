@@ -14,6 +14,13 @@
 typedef struct Word {                       // creates a char* struct, as to not use a char[][] and instead use a word* for a string array
     char *word;
 } Word;
+typedef struct hyphenWord{
+    char *word; 
+    int line_counter; 
+    int column_counter; 
+} hyphenWord;
+int inHyphen = 0;
+
 
 Word* dict_arr (char* dict_file, int* word_num);                                                              // making dictionary into a string array
 void file_search (char* filename, Word* dictionary, Word* dictionary1, Word* dictionary2, int word_num);      // determining if regular file or directory + recursive search
@@ -284,10 +291,12 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
 
                 if (c == '-') {
                     word_buffer[word_index] = '\0'; // null-terminate the word
+                    
                     Word key;
                     key.word = word_buffer;
 
-                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
+
+                    Word *found  = bsearch(key.word, dictionary , word_num, sizeof(Word), compare_words);
                     Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
                     Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
                     if (found == NULL && found1 == NULL && found2 == NULL) {
