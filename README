@@ -7,8 +7,8 @@ Design Choices:
         - It will read through the dictionary once and then use binary search to look for each word in the txt files.
 
 
-    Current Design Idea:
-        = For Dictionary
+    Design Idea:
+        - For Dictionary
             - Open Dictionary File
             - count number of words in dict either throught '\n' or whitespace
             - keep track of the largest word
@@ -23,7 +23,7 @@ Design Choices:
             - if NULL end while loop
 
         - Comparing txt and Dictionary 
-            - using ASCII values of 65-90 for capital letters and 97-122 for lowercase (+/- 32 to switch in-between)
+            - using ASCII values of 65-90 for capital letters and 97-122 for lowercase 
             - use binary search to look for ASCII value version of txt file words
                 - if first char in txt word is b/w 97-122, must also search for ASCII value word with first char minus 32
                 - also, for every char b/w 97-122, minus 32
@@ -31,3 +31,24 @@ Design Choices:
             - if no word is found print error with line and column 
                 - keep track of line with '\n'
                 - keep track of column with simple counter, reverts back to 1 everytime it encounters '\n'
+
+Design Requirements:
+    - argv[1] will be a path to a dictionary txt file.
+    - there will be at least 3 arguments passed to the program
+        - ./spchk argv[1] argv[2] ...
+    - argv[2] onwards will be either a directory or a txt file
+    - all txt files must be parsed through checking every word within each file
+
+    What Constitues a Word?
+    - punctuation counts as all non-alphabetical characters
+    - a word cannot begin with any of the following quotations or brackets: '' , "" , () , [], {}
+    - a word cannot end with any of the following: non-alphabetical characters and special characters, such as 'é'
+    - if a word from the txt file contains any of these in the order above, it will be ignored
+        - ex: ""[()]?b/ob..//  ==>  ?b/ob
+        - ex: "bob's./"  ==> bob's
+    - any punctuation in the middle of a word is valid and will be treated as a part of the word when searching through the dictionary
+
+    - Hyphens
+        - a hyphenated word is multiple words separated by hyphens
+        - all components of the hyphenated word must be correct for the entire word to be correct
+        - if any incomponent does not return a match, the entire word will be incorrect 

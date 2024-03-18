@@ -20,6 +20,36 @@ void file_search (char* filename, Word* dictionary, int word_num);      // deter
 void check_spelling(char* txt_file, Word* dictionary, int word_num);    // checks every word in txt file against dictionary array
 int return_error(char* txt_file, char* misspelled_word, int line, int column);  // returns error for misspelled word
 
+// int is_punctuation(char c) {
+//     return c == '.' || c == ',' || c == '!' || c == '?' || c == ':' || c == ';' || c == '(' || c == ')' 
+//                     || c == '[' || c == ']' || c == '{' || c == '}' || c == '/' || c == '\'';
+// }
+
+int is_quote_brack(char c) {
+    return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == '"' || c == '\'';
+}
+
+void remove_trailing_punctuation(char *str) {
+    if (str == NULL) // Check for NULL pointer
+        return;
+
+    int length = 0;
+
+    // Find the length of the string
+    while ((str + length) != NULL) {
+        length++;
+    }
+
+    // Decrement length to exclude null terminator
+    length--;
+
+    // Move backwards from the end of the string
+    while (length >= 0 && ispunct(*(str + length))) {
+        *(str + length) = '\0'; // Replace punctuation with null terminator
+        length--; // Move to the previous character
+    }
+}
+
 int compare_words (const void* first, const void* second) {   // for binary search 
 
     if (DEBUG) printf("check cmp 1\n");
@@ -207,6 +237,11 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
     char buffer[WORD_LENGTH];           // buffer for reading in the txt file
     char word_buffer[WORD_LENGTH];      // buffer for constructing words from the txt file
     int word_index = 0;                 // index within each word
+    // char valid_word[1024];              
+    // int punctuation_start_count = 0;
+    // int punctuation_middle_count = 0;
+    // int punctuation_end_count = 0;
+    // int punc_count = 0;
 
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
@@ -223,14 +258,6 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
 
                 if (DEBUG) printf("check spelling 4\n");
 
-                if (c == '\n') {
-
-                    if (DEBUG) printf("check spelling 5\n");
-
-                    line_counter++;
-                    column_counter = 1;
-                }
-
                 if (c == '-') {
                     word_buffer[word_index] = '\0'; // null-terminate the word
                     Word key;
@@ -246,26 +273,47 @@ void check_spelling(char* txt_file, Word* dictionary, int word_num) {
                     continue; // Skip processing hyphen as part of the word
                 }
 
-                if (DEBUG) printf("check spelling 6\n");
+                if (word_index > 0) {
+                    if (DEBUG) printf("check spelling 6\n");
+                    word_buffer[word_index] = '\0'; // null-terminate the word
+                    Word key;
+                    key.word = word_buffer;
 
-                word_buffer[word_index] = '\0'; // null-terminate the word
-                Word key;
-                key.word = word_buffer;
+                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
+                    // MISSING CASES FOR CAPITALIZED AND ALL CAPS
+                    if (found == NULL) {
 
-                Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
-                // MISSING CASES FOR CAPITALIZED AND ALL CAPS
-                if (found == NULL) {
+                        if (DEBUG) printf("check spelling 7\n");
 
-                    if (DEBUG) printf("check spelling 7\n");
-
-                    return_error(txt_file, key.word, line_counter, column_counter - word_index);
+                        return_error(txt_file, key.word, line_counter, column_counter - word_index);
+                    }
+                    memset(word_buffer, 0, sizeof(word_buffer));
+                    word_index = 0;
                 }
-                memset(word_buffer, 0, sizeof(word_buffer));
-                word_index = 0;
-            } else {
+
+                if (c == '\n') {
+
+                    if (DEBUG) printf("check spelling 5\n");
+
+                    line_counter++;
+                    column_counter = 0;
+                }
+
+            } 
+            
+            // else if (is_quote_brack(c) && word_index == 0) {
+            //     punc_count++;
+            //     continue;
+            // } else if ((ispunct(c)) && word_index > 0) {
+            //     punc_count++;
+            //     continue;
+            // }
+            
+            else {
 
                 if (DEBUG) printf("check spelling 8\n");
 
+                //word_index += punc_count;
                 if (word_index < WORD_LENGTH-1) {
 
                     if (DEBUG) printf("check spelling 9\n");
