@@ -20,12 +20,61 @@ void file_search (char* filename, Word* dictionary, int word_num);      // deter
 void check_spelling(char* txt_file, Word* dictionary, int word_num);    // checks every word in txt file against dictionary array
 int return_error(char* txt_file, char* misspelled_word, int line, int column);  // returns error for misspelled word
 
+int pronoun_checker (char * second){
+    size_t length = strlen(second); 
+    for(size_t i = 1; i < length; i++){
+        if(second[1] <= 90 && second[i] >= 65) return 2;      // checks capitalization
+    }
+    return 1;
+}
 int compare_words (const void* first, const void* second) {   // for binary search 
 
     if (DEBUG) printf("check cmp 1\n");
+    
+    switch(pronoun_checker(((Word*)second)->word)){
+        size_t length = strlen(second); 
+        char* dict = ((Word*)second)->word;
+        char* temp;
+        int comp; 
+        case 1:                                               // regular word
+            for(size_t i = 0; i < length; i++){               // fully uppercase
+                temp[i] = toupper(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
 
+            for(size_t i = 0; i < length; i++){               // fully lowercase
+                temp[i] = tolower(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+
+            temp[0] = toupper(dict[0]);                       // first capitalized
+            for(size_t i = 1; i < length; i++){               
+                temp[i] = tolower(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+
+            return 1;
+        case 2:                                               // pronoun
+            for(size_t i = 0; i < length; i++){               // fully uppercase
+                temp[i] = toupper(dict[i]);
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+            
+            temp[0] = toupper(dict[0]);                       // first capitalized
+            for(size_t i = 1; i < length; i++){               
+                temp[i] = dict[i];
+            }
+            int comp = strcmp ((char*)first, dict);
+            if(comp == 0) return 0;
+
+            return 1; 
+    }
     return strcmp ((char*)first, ((Word*)second)->word);
-}     
+} 
 
 int compare_strings (const void* first, const void* second) {   // for qsort for testing our dictionaries
     char *s1 = ((Word*)first)->word;
@@ -181,13 +230,15 @@ void file_search (char* filename, Word* dictionary, int word_num) {
 
 }
 
+
 int case_word(char *word){
     for(int i = 1; i < sizeof(char*); i++){
+
         if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
-            return 1;                        // returns 1 if capitalized letter
+            return 2;                        // returns 1 if capitalized letter
         }
     }
-    return 0;                                // not a pronoun 
+    return 1;                                // not a pronoun 
 }
 
 void check_spelling(char* txt_file, Word* dictionary, int word_num) {
@@ -303,7 +354,7 @@ int return_error(char* txt_file, char* misspelled_word, int line, int column) {
     return EXIT_FAILURE;
 }
 
-int main (int argc, char** argv){
+int main (int argc, char** argv) {
     if (argc < 3) {
         printf("Use of %s: <dictionary_path> <file1> <file2> ...", argv[0]);
         return EXIT_FAILURE;
@@ -337,6 +388,6 @@ int main (int argc, char** argv){
     }
     free(official_dict_arr);
 
-
+    
     return EXIT_SUCCESS;
 }
