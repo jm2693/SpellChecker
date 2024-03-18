@@ -30,8 +30,10 @@ int is_quote_brack(char c) {
 }
 
 void remove_trailing_punctuation(char *str) {
-    if (str == NULL) // Check for NULL pointer
+    if (str == NULL) {
+        perror("Error: ");
         return;
+    } // Check for NULL pointer
 
     int length = 0;
 
