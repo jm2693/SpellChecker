@@ -133,7 +133,12 @@ int case_word(char *word){
 }
 
 void check_for_word(char* word, Word* dictionary) {
-
+    char ex[12]; 
+    switch(case_word(ex)){
+        case 1:                     // case for regular words
+        
+        case 2:                     // case for pronouns/ words that have capitalization in middle
+    }
 
 }
 
@@ -170,12 +175,7 @@ int main (int argc, char** argv){
     }
     free(official_dict_arr);
 
-    char ex[12]; 
-    switch(case_word(ex)){
-        case 1:                     // case for regular words
-        
-        case 2:                     // case for pronouns/ words that have capitalization in middle
-    }
+    
     return EXIT_SUCCESS;
 }
 
