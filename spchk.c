@@ -15,10 +15,10 @@ typedef struct Word {                       // creates a char* struct, as to not
     char *word;
 } Word;
 
-Word* dict_arr (char* dict_file, int* word_num);
-void file_search (char* filename, Word* dictionary, int word_num);
-void check_spelling(char* txt_file, Word* dictionary, int word_num);
-int return_error(char* txt_file, char* misspelled_word, int line, int column);
+Word* dict_arr (char* dict_file, int* word_num);                        // making dictionary into a string array
+void file_search (char* filename, Word* dictionary, int word_num);      // determining if regular file or directory + recursive search
+void check_spelling(char* txt_file, Word* dictionary, int word_num);    // checks every word in txt file against dictionary array
+int return_error(char* txt_file, char* misspelled_word, int line, int column);  // returns error for misspelled word
 
 int compare_words (const void* first, const void* second) {   // for binary search 
 
@@ -27,7 +27,7 @@ int compare_words (const void* first, const void* second) {   // for binary sear
     return strcmp ((char*)first, ((Word*)second)->word);
 }     
 
-int compare_strings (const void* first, const void* second) {
+int compare_strings (const void* first, const void* second) {   // for qsort for testing our dictionaries
     char *s1 = ((Word*)first)->word;
     char *s2 = ((Word*)second)->word;
 
