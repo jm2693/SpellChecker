@@ -47,17 +47,17 @@ void file_search (char* filename) {          // function to recursively search f
     closedir(dir);                           // close file when done 
 }
 
-int case_word(char word[]){
+int case_word(char word[]) {
     for(int i = 1; i < sizeof(word); i++){
         if(word[i] <=90 && word[i] >= 65){   // checks ascii value if it is a capitalized letter within word
-            return 1;                        // returns 1 if capitalized letter
+            return 2;                        // returns 1 if capitalized letter
         }
     }
-    return 0;                                // not a pronoun 
+    return 1;                                // not a pronoun 
 }
 
 void check_for_word() {
-
+    
 }
 
 
@@ -79,7 +79,12 @@ int main (int argc, char** argv){
 
     char *fname = argv[1];
 	int fd = open(fname, O_RDONLY); 
-    
-    
+
+    char ex[12]; 
+    switch(case_word(ex)){
+        case 1:                     // case for regular words
+        
+        case 2:                     // case for pronouns/ words that have capitalization in middle
+    }
 
 }
