@@ -20,6 +20,12 @@ void file_search (char* filename, Word* dictionary, Word* dictionary1, Word* dic
 void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* dicitonary2, int word_num);    // checks every word in txt file against dictionary array
 int return_error(char* txt_file, char* misspelled_word, int line, int column);                                // returns error for misspelled word
 
+
+int is_brack_quote(char c) {
+    return (c == '\'' || c == '"' || c == '{' || c == '}' || c == '(' || c == ')' || c == '[' || c == ']');
+}
+
+
 int compare_words (const void* first, const void* second) {   // for binary search 
 
     if (DEBUG) printf("check cmp 1\n");
@@ -295,6 +301,11 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
     char buffer[WORD_LENGTH];           // buffer for reading in the txt file
     char word_buffer[WORD_LENGTH];      // buffer for constructing words from the txt file
     int word_index = 0;                 // index within each word
+    int punct = 0;
+    char punct_string[1024] = "";
+
+    char eow_tracker[3] = "";
+    int eow_flag = 0;
 
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
@@ -315,14 +326,17 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
                     word_buffer[word_index] = '\0'; // null-terminate the word
                     Word key;
                     key.word = word_buffer;
+                    strcat(punct_string, word_buffer);
 
                     Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
                     Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
                     Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
                     if (found == NULL && found1 == NULL && found2 == NULL) {
-                        return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
+                        return_error(txt_file, punct_string, line_counter, column_counter - (word_index+punct)); // Adjust column for incomplete word
                     }
                     memset(word_buffer, 0, sizeof(word_buffer));
+                    memset(punct_string, 0, sizeof(punct_string));
+                    punct = 0;
                     word_index = 0;
 
                     continue; // Skip processing hyphen as part of the word
@@ -333,6 +347,7 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
                     word_buffer[word_index] = '\0'; // null-terminate the word
                     Word key;
                     key.word = word_buffer;
+                    strcat(punct_string, word_buffer);
 
                     Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
                     Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
@@ -341,9 +356,11 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
 
                         if (DEBUG) printf("check spelling 7\n");
 
-                        return_error(txt_file, key.word, line_counter, column_counter - word_index);
+                        return_error(txt_file, punct_string, line_counter, column_counter - (word_index+punct));
                     }
                     memset(word_buffer, 0, sizeof(word_buffer));
+                    memset(punct_string, 0, sizeof(punct_string));
+                    punct = 0;
                     word_index = 0;
                 }
 
@@ -355,7 +372,17 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
                     column_counter = 0;
                 }
 
-            } else {
+            } 
+
+            else if (word_index == 0 && is_brack_quote(c)) {
+                punct_string[punct++] = c;
+            }
+
+            else if (word_index > 0 && !isalpha(c)) {
+
+            }
+
+            else {
 
                 if (DEBUG) printf("check spelling 8\n");
 
@@ -377,12 +404,13 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
         word_buffer[word_index] = '\0'; // null-terminate the incomplete word
         Word key;
         key.word = word_buffer;
+        strcat(punct_string, word_buffer);
 
         Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
         Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
         Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
         if (found == NULL && found1 == NULL && found2 == NULL) {
-            return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
+            return_error(txt_file, punct_string, line_counter, column_counter - (word_index+punct)); // Adjust column for incomplete word
         }
     }
 
