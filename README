@@ -50,5 +50,8 @@ Design Requirements:
 
     - Hyphens
         - a hyphenated word is multiple words separated by hyphens
-        - all components of the hyphenated word must be correct for the entire word to be correct
-        - if any incomponent does not return a match, the entire word will be incorrect 
+        - if any incomponent does not return a match, that part of the word will be deemed incorrect and the line and column will be provided on where it is. 
+    - Fully upper cased words will be deemed correct 
+    - First letter capitalization will be deemed correct as well
+    - Assumption is that first letter capitalization in dictionary will be pronouns, therefore the dictionary automatically has fully lowercased letters 
+    
