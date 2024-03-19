@@ -251,36 +251,7 @@ int case_word(char *word){
     return 0;                                // not a pronoun 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* dictionary2, int word_num) {
-
-    if (DEBUG) printf("check spelling 1\n");
 
     int fd = open(txt_file, O_RDONLY);
     if (fd < 0) {
@@ -291,102 +262,85 @@ void check_spelling(char* txt_file, Word* dictionary, Word* dictionary1, Word* d
     int line_counter = 1;
     int column_counter = 0;
 
-    ssize_t bytes_read;                 
-    char buffer[WORD_LENGTH];           // buffer for reading in the txt file
-    char word_buffer[WORD_LENGTH];      // buffer for constructing words from the txt file
-    int word_index = 0;                 // index within each word
-
+    ssize_t bytes_read;
+    char buffer[WORD_LENGTH];
+    char word_buffer[WORD_LENGTH];
+    int word_index = 0;
+    int hyphenated_word = 0; // Flag to track if currently processing a hyphenated word
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
-
-        if (DEBUG) printf("check spelling 2\n");
-
         for (ssize_t i = 0; i < bytes_read; i++) {
-
-            if (DEBUG) printf("check spelling 3\n");
-
             char c = buffer[i];
             column_counter++;
+
             if (c == ' ' || c == '\n' || c == '\t' || c == '\v' || c == '-') {
-
-                if (DEBUG) printf("check spelling 4\n");
-
                 if (c == '-') {
-                    word_buffer[word_index] = '\0'; // null-terminate the word
-                    Word key;
-                    key.word = word_buffer;
-
-                    Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
-                    Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
-                    Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
-                    if (found == NULL && found1 == NULL && found2 == NULL) {
-                        return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
-                    }
-                    memset(word_buffer, 0, sizeof(word_buffer));
-                    word_index = 0;
-
-                    continue; // Skip processing hyphen as part of the word
+                    // If '-' encountered, set flag to indicate hyphenated word
+                    hyphenated_word = 1;
+                    word_buffer[word_index] = c; // Include hyphen in word buffer
+                    word_index++;
+                    continue;
                 }
 
                 if (word_index > 0) {
-                    if (DEBUG) printf("check spelling 6\n");
-                    word_buffer[word_index] = '\0'; // null-terminate the word
+                    // Process the word
+                    word_buffer[word_index] = '\0';
                     Word key;
                     key.word = word_buffer;
 
+                    // Search for the word in dictionaries
                     Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
                     Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
                     Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
+
                     if (found == NULL && found1 == NULL && found2 == NULL) {
-
-                        if (DEBUG) printf("check spelling 7\n");
-
+                        // Adjust column for incomplete word and report error
                         return_error(txt_file, key.word, line_counter, column_counter - word_index);
                     }
+
+                    // Reset word buffer and index
                     memset(word_buffer, 0, sizeof(word_buffer));
                     word_index = 0;
+
+                    // Reset hyphenated word flag
+                    hyphenated_word = 0;
                 }
 
                 if (c == '\n') {
-
-                    if (DEBUG) printf("check spelling 5\n");
-
+                    // Update line counter and reset column counter
                     line_counter++;
                     column_counter = 0;
                 }
-
             } else {
-
-                if (DEBUG) printf("check spelling 8\n");
-
-                if (word_index < WORD_LENGTH-1) {
-
-                    if (DEBUG) printf("check spelling 9\n");
-
-                    word_buffer[(word_index++)] = c;
+                // Append character to word buffer
+                if (word_index < WORD_LENGTH - 1) {
+                    word_buffer[word_index++] = c;
                 }
             }
-
-            if (DEBUG) printf("check spelling 10\n");
-
         }
     }
 
     if (word_index > 0) {
-        column_counter++;
-        word_buffer[word_index] = '\0'; // null-terminate the incomplete word
+        // Process the remaining word
+        word_buffer[word_index] = '\0';
         Word key;
         key.word = word_buffer;
 
+        // Search for the word in dictionaries
         Word *found = bsearch(key.word, dictionary, word_num, sizeof(Word), compare_words);
         Word *found1 = bsearch(key.word, dictionary1, word_num, sizeof(Word), compare_words);
         Word *found2 = bsearch(key.word, dictionary2, word_num, sizeof(Word), compare_words);
+
         if (found == NULL && found1 == NULL && found2 == NULL) {
-            return_error(txt_file, key.word, line_counter, column_counter - word_index); // Adjust column for incomplete word
+            // Adjust column for incomplete word and report error
+            if (hyphenated_word) {
+                // If the last word was part of a hyphenated word, adjust column counter
+                return_error(txt_file, key.word, line_counter, column_counter - word_index - 1);
+            } else {
+                return_error(txt_file, key.word, line_counter, column_counter - word_index);
+            }
         }
     }
-
-    if (DEBUG) printf("check spelling 11\n");
 
     close(fd);
 }
