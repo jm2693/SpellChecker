@@ -53,3 +53,11 @@ Design Idea:
             - if no word is found print error with line and column 
                 - keep track of line with '\n'
                 - keep track of column with simple counter, reverts back to 1 everytime it encounters '\n'
+
+Test Cases:
+    - plain .txt files from arguments
+    - directory with single .txt file in argument 
+    - nested directory with multiple .txt files in arguments
+    - .txt file with words exactly in the dictionary 
+    - .txt file with some words in dictionary 
+    - .txt file 
